@@ -18,11 +18,7 @@ docker stack rm docker-swarm-monitor # remove the project
 
 The following components are part of this project
 
-## cAdvisor
-
-## node Exporter
-
-## dockerd-exporter
-
-## Prometheus
-
+* cAdvisor
+* node Exporter
+* dockerd-exporter
+* Prometheus
