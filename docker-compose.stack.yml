@@ -12,6 +12,8 @@ configs:
     file: ./dockerd-exporter/Caddyfile
    prom_conf:
     file: ./prometheus/conf/prometheus.yml
+   node_exporter_entrypoint:
+    file: ./node-exporter/docker-entrypoint.sh
 
 services:
   cadvisor:
@@ -33,14 +35,32 @@ services:
         reservations:
           memory: 64M
 
-  exporter:
+  node-exporter:
     image: prom/node-exporter:latest
+    networks:
+      - net
     volumes:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
       - /proc:/host/proc:ro
+      - /etc/hostname:/etc/nodename
+    configs:
+      - source: node_exporter_entrypoint 
+        target: /docker-entrypoint.sh
     deploy:
       mode: global
+    environment:
+      - NODE_ID={{.Node.ID}}
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/home/'
+      - '--no-collector.ipvs'
+    entrypoint:
+       - /bin/sh
+       - /docker-entrypoint.sh
 
   dockerd-exporter:
     image: stefanprodan/caddy

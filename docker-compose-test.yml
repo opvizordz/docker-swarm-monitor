@@ -1,0 +1,29 @@
+version: "3.3"
+
+services:
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    volumes:
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /proc:/host/proc:ro
+      - /etc/hostname:/etc/nodename
+    deploy:
+      mode: global
+    environment:
+      - NODE_ID={{.Node.ID}}
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/etc/node-exporter/'
+      - '--no-collector.ipvs'
+    entrypoint: 
+      - NODE_NAME=$$(cat /etc/nodename)
+      - echo 'node_meta{node_id=\"$NODE_ID\", container_label_com_docker_swarm_node_id=\"$NODE_ID\", node_name=\"$NODE_NAME\"} 1' > /etc/node-exporter/node-meta.prom
+      - set -- /bin/node_exporter "$$@"
+      - exec "$$@"
+    
+    
